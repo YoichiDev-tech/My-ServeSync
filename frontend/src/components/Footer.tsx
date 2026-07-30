@@ -1,17 +1,27 @@
+import { Link } from "react-router-dom";
+
 const columns = [
   {
     title: "Product",
-    links: ["Solutions", "Features", "Pricing", "FAQ"],
+    links: [
+      { label: "Solutions", href: "/#solutions" },
+      { label: "Features", href: "/#features" },
+      { label: "Pricing", href: "/#pricing" },
+      { label: "FAQ", href: "/#faq" },
+    ],
   },
   {
     title: "Company",
-    links: ["About", "Contact", "Careers"],
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/#contact" },
+    ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-espresso text-cream/90 py-14 px-6 font-body">
+    <footer className="w-full bg-espresso text-cream/90 py-14 px-6 font-body cursor-default">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-10">
         <div className="max-w-xs">
           <h2 className="font-display text-2xl font-semibold text-cream">
@@ -29,15 +39,25 @@ export default function Footer() {
               <span className="font-semibold text-cream text-sm uppercase tracking-wide">
                 {col.title}
               </span>
-              {col.links.map((link) => (
-                <a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
-                  className="text-cream/60 hover:text-ember-light transition text-sm"
-                >
-                  {link}
-                </a>
-              ))}
+              {col.links.map((link) =>
+                link.href.startsWith("/#") ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-cream/60 hover:text-ember-light transition text-sm"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className="text-cream/60 hover:text-ember-light transition text-sm"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
             </div>
           ))}
         </div>

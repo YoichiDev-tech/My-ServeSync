@@ -5,7 +5,7 @@ export default function PricingSection() {
   const tiers = serveSync.pricing;
 
   return (
-    <SectionWrapper className="bg-cream text-espresso" id="pricing">
+    <SectionWrapper className="bg-cream text-espresso cursor-default" id="pricing">
       <div className="max-w-2xl mx-auto text-center">
         <span className="text-xs font-mono uppercase tracking-[0.25em] text-ember-dark">
           Pricing

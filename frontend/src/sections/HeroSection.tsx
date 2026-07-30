@@ -4,7 +4,7 @@ import SavingsReceipt from "../components/SavingsReceipt";
 
 export default function HeroSection() {
   return (
-    <SectionWrapper className="bg-cream text-espresso pt-16 pb-24" id="hero">
+    <SectionWrapper className="bg-cream text-espresso pt-16 pb-24 cursor-default" id="hero">
       <div className="grid md:grid-cols-2 gap-16 items-center">
         <div className="flex flex-col gap-6">
           <span className="slide-up inline-block w-fit text-xs font-mono uppercase tracking-[0.25em] text-ember-dark bg-ember/10 px-3 py-1 rounded-full">

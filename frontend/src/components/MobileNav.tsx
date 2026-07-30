@@ -6,7 +6,7 @@ export default function MobileNavbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="w-full bg-cream border-b border-espresso/10 py-4 px-6 md:hidden sticky top-0 z-40">
+    <nav className="w-full bg-cream border-b border-espresso/10 py-4 px-6 md:hidden sticky top-0 z-40 cursor default">
       <div className="flex justify-between items-center">
         <span className="font-display text-xl font-semibold text-espresso">
           ServeSync
@@ -26,7 +26,7 @@ export default function MobileNavbar() {
           {links.map((link) => (
             <a
               key={link}
-              href={`#${link.toLowerCase()}`}
+              href={`/#${link.toLowerCase()}`}
               onClick={() => setOpen(false)}
               className="py-1"
             >
@@ -34,7 +34,7 @@ export default function MobileNavbar() {
             </a>
           ))}
           <a
-            href="#cta"
+            href="/#cta"
             onClick={() => setOpen(false)}
             className="bg-ember text-cream font-semibold px-5 py-3 rounded-md text-center"
           >

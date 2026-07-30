@@ -2,7 +2,7 @@ import SectionWrapper from "../components/SectionWrapper";
 
 export default function ContactSection() {
   return (
-    <SectionWrapper className="bg-cream text-espresso" tight id="contact">
+    <SectionWrapper className="bg-cream text-espresso cursor-default" tight id="contact">
       <h2 className="slide-up font-display text-3xl md:text-4xl font-semibold">
         Talk to us
       </h2>

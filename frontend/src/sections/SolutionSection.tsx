@@ -5,7 +5,7 @@ export default function SolutionSection() {
   const pillars = serveSync.pillars;
 
   return (
-    <SectionWrapper className="bg-cream text-espresso" id="solutions">
+    <SectionWrapper className="bg-cream text-espresso cursor-default" id="solutions">
       <div className="max-w-2xl">
         <span className="text-xs font-mono uppercase tracking-[0.25em] text-ember-dark">
           The five things ServeSync fixes

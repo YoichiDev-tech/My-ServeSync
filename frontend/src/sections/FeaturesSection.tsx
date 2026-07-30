@@ -5,7 +5,7 @@ export default function FeaturesSection() {
   const extras = serveSync.extraAutomations;
 
   return (
-    <SectionWrapper className="bg-espresso text-cream tile-texture" id="features">
+    <SectionWrapper className="bg-espresso text-cream tile-texture cursor-default" id="features">
       <div className="max-w-2xl">
         <span className="text-xs font-mono uppercase tracking-[0.25em] text-steam">
           Runs quietly in the background

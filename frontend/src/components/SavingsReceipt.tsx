@@ -4,7 +4,7 @@ export default function SavingsReceipt() {
   const pillars = serveSync.pillars;
 
   return (
-    <div className="receipt w-full max-w-sm mx-auto px-6 pt-8 pb-6 font-mono text-espresso rotate-[-1deg]">
+    <div className="receipt w-full max-w-sm mx-auto px-6 pt-8 pb-6 font-mono text-espresso rotate-[-1deg] cursor-default">
       <div className="text-center">
         <p className="uppercase tracking-[0.3em] text-xs text-muted">
           ServeSync

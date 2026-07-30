@@ -5,7 +5,7 @@ export default function ValueSection() {
   const segments = serveSync.segments;
 
   return (
-    <SectionWrapper className="bg-paper text-espresso">
+    <SectionWrapper className="bg-paper text-espresso cursor-default">
       <div className="max-w-2xl">
         <span className="text-xs font-mono uppercase tracking-[0.25em] text-ember-dark">
           Built for hospitality, not adapted from it

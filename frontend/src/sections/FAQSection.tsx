@@ -5,7 +5,7 @@ export default function FAQSection() {
   const faqs = serveSync.faqs;
 
   return (
-    <SectionWrapper className="bg-paper text-espresso" tight id="faq">
+    <SectionWrapper className="bg-paper text-espresso cursor-default" tight id="faq">
       <h2 className="slide-up font-display text-3xl md:text-4xl font-semibold">
         Questions, answered
       </h2>
