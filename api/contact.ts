@@ -23,5 +23,7 @@ app.post("/api/contact", (req: Request, res: Response) => {
     });
 });
 
-// Vercel requires exporting a handler function
-export default app;
+// Wrap express in a handler Vercel can execute
+export default function handler(req: any, res: any) {
+  return app(req, res);
+}
