@@ -1,12 +1,11 @@
 import express, { Request, Response } from "express";
 
 const app = express();
-
 // Needed for JSON body parsing
 app.use(express.json());
 
-// Minimal POST endpoint
-app.post("/api/contact", (req: Request, res: Response) => {
+// Minimal POST endpoint (Route)
+app.post("/contact", (req: Request, res: Response) => {
     const { name, email, businessType, message } = req.body;
 
     // Basic validation (just initial / will be extended later)
@@ -23,7 +22,7 @@ app.post("/api/contact", (req: Request, res: Response) => {
     });
 });
 
-// Wrap express in a handler Vercel can execute
+// Vercel compatible handler
 export default function handler(req: any, res: any) {
   return app(req, res);
 }
