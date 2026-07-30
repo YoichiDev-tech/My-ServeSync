@@ -9,12 +9,12 @@ export default function CTASection() {
       </h2>
 
       {/* Subtitle animation */}
-      <p className="text-lg md:text-xl text-green-900 fade-in mt-4">
+      <p className="text-lg md:text-xl text-black fade-in mt-4">
         Join the first wave of hospitality operators using ServeSync.
       </p>
 
       {/* Button animation */}
-      <button className="mt-6 bg-brandBlue text-green-900 font-semibold px-8 py-4 rounded-lg hover:bg-brandBlue/80 transition slide-up">
+      <button className="mt-6 bg-brandBlue text-black font-semibold px-8 py-4 rounded-lg hover:bg-brandBlue/80 transition slide-up">
         Get Started Today
       </button>
     </SectionWrapper>
