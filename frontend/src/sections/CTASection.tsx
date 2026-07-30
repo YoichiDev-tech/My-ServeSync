@@ -10,7 +10,7 @@ export default function CTASection() {
 
       {/* Subtitle animation */}
       <p className="text-lg md:text-xl text-brandBlue/90 fade-in mt-4">
-        Join hundreds of hospitality operators using ServeSync.
+        Join the first wave of hospitality operators using ServeSync.
       </p>
 
       {/* Button animation */}

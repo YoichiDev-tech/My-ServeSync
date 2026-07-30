@@ -2,38 +2,44 @@ import SectionWrapper from "../components/SectionWrapper";
 
 export default function ContactSection() {
   return (
-    <SectionWrapper className="bg-brandBrown text-white">
-      {/* Title animation */}
-      <h2 className="text-3xl md:text-4xl font-bold slide-up">
-        Contact Us
+    <SectionWrapper className="bg-cream text-espresso" tight id="contact">
+      <h2 className="slide-up font-display text-3xl md:text-4xl font-semibold">
+        Talk to us
       </h2>
-
-      {/* Description animation */}
-      <p className="text-lg md:text-xl text-brandBlue/90 fade-in">
-        Have questions? Want a demo? Reach out and we'll get back to you.
+      <p className="fade-in text-lg text-espresso/75">
+        Tell us about your business and we'll show you exactly what ServeSync
+        automates for you first.
       </p>
 
-      {/* Form animation */}
-      <form className="flex flex-col gap-4 mt-6 slide-up">
+      <form className="slide-up flex flex-col gap-4 mt-4">
         <input
           type="text"
-          placeholder="Your Name"
-          className="px-4 py-3 rounded bg-white text-brandBrown"
+          placeholder="Your name"
+          className="px-4 py-3 rounded-md bg-paper border border-espresso/15 text-espresso placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ember"
         />
 
         <input
           type="email"
-          placeholder="Your Email"
-          className="px-4 py-3 rounded bg-white text-brandBrown"
+          placeholder="Work email"
+          className="px-4 py-3 rounded-md bg-paper border border-espresso/15 text-espresso placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ember"
+        />
+
+        <input
+          type="text"
+          placeholder="Business type (e.g. family restaurant, multi-location group)"
+          className="px-4 py-3 rounded-md bg-paper border border-espresso/15 text-espresso placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ember"
         />
 
         <textarea
-          placeholder="Your Message"
-          className="px-4 py-3 rounded bg-white text-brandBrown h-32"
+          placeholder="What's eating the most time right now?"
+          className="px-4 py-3 rounded-md bg-paper border border-espresso/15 text-espresso placeholder:text-muted h-28 focus:outline-none focus:ring-2 focus:ring-ember"
         />
 
-        <button className="bg-brandBlue text-brandBrown font-semibold px-6 py-3 rounded hover:bg-brandBlue/80 transition">
-          Send Message
+        <button
+          type="button"
+          className="bg-ember text-cream font-semibold px-6 py-3 rounded-md hover:bg-ember-dark transition w-fit"
+        >
+          Send message
         </button>
       </form>
     </SectionWrapper>

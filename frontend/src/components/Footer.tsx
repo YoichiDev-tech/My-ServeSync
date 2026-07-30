@@ -1,33 +1,50 @@
+const columns = [
+  {
+    title: "Product",
+    links: ["Solutions", "Features", "Pricing", "FAQ"],
+  },
+  {
+    title: "Company",
+    links: ["About", "Contact", "Careers"],
+  },
+];
+
 export default function Footer() {
   return (
-    <footer className="w-full bg-brandBrown text-white py-10 px-6 mt-20">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-6">
-        <div>
-          <h2 className="text-xl font-bold">ServeSync</h2>
-          <p className="text-brandBlue/90 mt-2">
-            Your AI back-office co-pilot for hospitality.
+    <footer className="w-full bg-espresso text-cream/90 py-14 px-6 font-body">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-10">
+        <div className="max-w-xs">
+          <h2 className="font-display text-2xl font-semibold text-cream">
+            ServeSync
+          </h2>
+          <p className="text-cream/60 mt-2 text-sm leading-relaxed">
+            The back-office platform for hospitality operators — time, money,
+            and waste, under control.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 text-brandBlue/90">
-          <span className="font-semibold">Navigation</span>
-          <span className="cursor-pointer hover:text-brandBlue transition">
-            Home
-          </span>
-          <span className="cursor-pointer hover:text-brandBlue transition">
-            Features
-          </span>
-          <span className="cursor-pointer hover:text-brandBlue transition">
-            Why ServeSync
-          </span>
-          <span className="cursor-pointer hover:text-brandBlue transition">
-            Contact
-          </span>
+        <div className="flex flex-wrap gap-16">
+          {columns.map((col) => (
+            <div key={col.title} className="flex flex-col gap-2">
+              <span className="font-semibold text-cream text-sm uppercase tracking-wide">
+                {col.title}
+              </span>
+              {col.links.map((link) => (
+                <a
+                  key={link}
+                  href={`#${link.toLowerCase()}`}
+                  className="text-cream/60 hover:text-ember-light transition text-sm"
+                >
+                  {link}
+                </a>
+              ))}
+            </div>
+          ))}
         </div>
 
-        <div className="text-brandBlue/90">
-          <span className="font-semibold">© 2026 ServeSync</span>
-          <p>All rights reserved.</p>
+        <div className="text-cream/50 text-sm">
+          <span className="font-semibold text-cream/80">© 2026 ServeSync</span>
+          <p className="mt-1">All rights reserved.</p>
         </div>
       </div>
     </footer>

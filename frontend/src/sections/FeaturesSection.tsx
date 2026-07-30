@@ -2,34 +2,34 @@ import serveSync from "../data/serveSync";
 import SectionWrapper from "../components/SectionWrapper";
 
 export default function FeaturesSection() {
-  const features = serveSync.landingPage.find(
-    (section) => section.id === "features"
-  );
-
-  if (!features) return null;
-
-  const featureList = features.featureList || [];
+  const extras = serveSync.extraAutomations;
 
   return (
-    <SectionWrapper className="bg-brandBrown text-white">
-      {/* Title animation */}
-      <h2 className="text-3xl md:text-4xl font-bold slide-up">
-        {features.title}
-      </h2>
+    <SectionWrapper className="bg-espresso text-cream tile-texture" id="features">
+      <div className="max-w-2xl">
+        <span className="text-xs font-mono uppercase tracking-[0.25em] text-steam">
+          Runs quietly in the background
+        </span>
+        <h2 className="slide-up font-display text-3xl md:text-4xl font-semibold mt-3">
+          And once the essentials are covered, we keep going.
+        </h2>
+      </div>
 
-      {/* Content animation */}
-      <p className="text-lg md:text-xl text-brandBlue/90 fade-in">
-        {features.content}
-      </p>
-
-      {/* List animation */}
-      {featureList.length > 0 && (
-        <ul className="list-disc pl-6 text-brandBlue/90 space-y-2 slide-up">
-          {featureList.map((feature, index) => (
-            <li key={index}>{feature}</li>
-          ))}
-        </ul>
-      )}
+      <div className="grid md:grid-cols-3 gap-6 mt-6">
+        {extras.map((extra) => (
+          <div
+            key={extra.title}
+            className="slide-up bg-cream/5 border border-cream/10 rounded-lg p-6 flex flex-col gap-2"
+          >
+            <h3 className="font-display text-lg font-semibold text-cream">
+              {extra.title}
+            </h3>
+            <p className="text-cream/70 leading-relaxed text-sm">
+              {extra.description}
+            </p>
+          </div>
+        ))}
+      </div>
     </SectionWrapper>
   );
 }

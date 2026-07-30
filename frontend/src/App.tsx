@@ -6,9 +6,9 @@ import SolutionSection from "./sections/SolutionSection";
 import FeaturesSection from "./sections/FeaturesSection";
 import ValueSection from "./sections/ValueSection";
 import PricingSection from "./sections/PricingSection";
-import ContactSection from "./sections/ContactSection";
 import FAQSection from "./sections/FAQSection";
 import CTASection from "./sections/CTASection";
+import ContactSection from "./sections/ContactSection";
 
 export default function App() {
   return (
@@ -19,9 +19,9 @@ export default function App() {
       <FeaturesSection />
       <ValueSection />
       <PricingSection />
-      <ContactSection />
       <FAQSection />
       <CTASection />
+      <ContactSection />
     </Layout>
   );
 }

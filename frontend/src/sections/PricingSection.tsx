@@ -1,49 +1,68 @@
+import serveSync from "../data/serveSync";
 import SectionWrapper from "../components/SectionWrapper";
 
 export default function PricingSection() {
+  const tiers = serveSync.pricing;
+
   return (
-    <SectionWrapper className="bg-brandBrown text-white">
-      {/* Title animation */}
-      <h2 className="text-3xl md:text-4xl font-bold slide-up">
-        Pricing
-      </h2>
+    <SectionWrapper className="bg-cream text-espresso" id="pricing">
+      <div className="max-w-2xl mx-auto text-center">
+        <span className="text-xs font-mono uppercase tracking-[0.25em] text-ember-dark">
+          Pricing
+        </span>
+        <h2 className="slide-up font-display text-3xl md:text-4xl font-semibold mt-3">
+          Priced by how many doors you run, not by guesswork.
+        </h2>
+      </div>
 
-      {/* Description animation */}
-      <p className="text-lg md:text-xl text-brandBlue/90 fade-in">
-        Simple pricing designed for hospitality operators.
-      </p>
+      <div className="grid md:grid-cols-3 gap-6 mt-10 items-stretch">
+        {tiers.map((tier) => (
+          <div
+            key={tier.name}
+            className={`receipt flex flex-col px-6 pt-8 pb-6 font-body ${
+              tier.highlight ? "md:-translate-y-3 ring-2 ring-ember" : ""
+            }`}
+          >
+            {tier.highlight && (
+              <span className="text-[11px] font-mono uppercase tracking-wide text-ember-dark text-center mb-2">
+                Most popular
+              </span>
+            )}
+            <h3 className="font-display text-xl font-semibold text-center">
+              {tier.name}
+            </h3>
+            <p className="text-muted text-sm text-center mt-1">
+              {tier.audience}
+            </p>
 
-      {/* Cards animation */}
-      <div className="grid md:grid-cols-3 gap-6 mt-10">
-        <div className="bg-white text-brandBrown p-6 rounded-lg slide-up">
-          <h3 className="text-xl font-bold">Starter</h3>
-          <p className="mt-2 text-brandBrown/80">$35 / month</p>
-          <ul className="mt-4 space-y-2">
-            <li>Basic Scheduling</li>
-            <li>Inventory Tracking</li>
-            <li>Daily Checklists</li>
-          </ul>
-        </div>
+            <div className="text-center mt-4">
+              <span className="font-mono text-3xl font-bold">
+                {tier.price}
+              </span>
+              <span className="text-muted text-sm"> {tier.cadence}</span>
+            </div>
 
-        <div className="bg-white text-brandBrown p-6 rounded-lg slide-up">
-          <h3 className="text-xl font-bold">Pro</h3>
-          <p className="mt-2 text-brandBrown/80">$99 / month</p>
-          <ul className="mt-4 space-y-2">
-            <li>AI Scheduling</li>
-            <li>Predictive Inventory Alerts</li>
-            <li>Smart Communication</li>
-          </ul>
-        </div>
+            <ul className="receipt-dash mt-6 pt-5 flex flex-col gap-3 text-sm flex-1">
+              {tier.lineItems.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-sage font-mono">✓</span>
+                  <span className="text-espresso/85">{item}</span>
+                </li>
+              ))}
+            </ul>
 
-        <div className="bg-white text-brandBrown p-6 rounded-lg slide-up">
-          <h3 className="text-xl font-bold">Enterprise</h3>
-          <p className="mt-2 text-brandBrown/80">Custom</p>
-          <ul className="mt-4 space-y-2">
-            <li>Full Automation Suite</li>
-            <li>Dedicated Support</li>
-            <li>Custom Integrations</li>
-          </ul>
-        </div>
+            <a
+              href="#cta"
+              className={`mt-6 text-center font-semibold px-6 py-3 rounded-md transition ${
+                tier.highlight
+                  ? "bg-ember text-cream hover:bg-ember-dark"
+                  : "border border-espresso/25 text-espresso hover:bg-espresso hover:text-cream"
+              }`}
+            >
+              Start free trial
+            </a>
+          </div>
+        ))}
       </div>
     </SectionWrapper>
   );
