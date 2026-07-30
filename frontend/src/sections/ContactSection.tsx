@@ -37,6 +37,23 @@ export default function ContactSection() {
 
         <button
           type="button"
+          onClick={async () => {
+            const payload ={
+              name,
+              email,
+              businessType,
+              message
+            };
+
+            const res = await fetch("/api/contact", {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            console.log(data);
+          }}
           className="bg-ember text-cream font-semibold px-6 py-3 rounded-md hover:bg-ember-dark transition w-fit"
         >
           Send message
