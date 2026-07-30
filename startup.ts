@@ -1,37 +1,37 @@
-interface Mission {
+export interface Mission {
   text: string;
 }
 
-interface TargetAudience {
+export interface TargetAudience {
   primary: string[];
   leverage: string;
 }
 
-interface CoreProblem {
+export interface CoreProblem {
   reality: string;
   consequence: string;
 }
 
-interface SolutionFeature {
+export interface SolutionFeature {
   title: string;
   description: string;
 }
 
-interface Solution {
+export interface Solution {
   features: SolutionFeature[];
   impacts: string[];
 }
 
-interface ValueProp {
+export interface ValueProp {
   text: string;
 }
 
-interface BrandPersonality {
+export interface BrandPersonality {
   tone: string[];
   colors: string[];
 }
 
-interface LandingPageSection {
+export interface LandingPageSection {
   id: string;
   title: string;
   content: string;
