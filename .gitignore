@@ -1,2 +1,9 @@
 node_modules/
 package-lock.json
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+.vercel
+.env*
