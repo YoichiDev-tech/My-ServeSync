@@ -47,7 +47,7 @@ Initial full landing page release including:
 
 ## Bugs (on current commit)
 
-Minor UI polish may be needed after deployment depending on Vercel rendering
+None
 
 ## Future improvements
 
@@ -56,7 +56,6 @@ Minor UI polish may be needed after deployment depending on Vercel rendering
 - Add smooth scroll navigation
 - Add active link highlighting
 - Add animations triggered on scroll
-- Add backend integration for contact form
 - Add multi‑language support
 
 ## Author
