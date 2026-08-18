@@ -23,9 +23,11 @@ export default function Footer() {
   return (
     <footer className="w-full bg-espresso text-cream/90 py-14 px-6 font-body cursor-default">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-10">
+        
+        {/* Branding */}
         <div className="max-w-xs">
           <h2 className="font-display text-2xl font-semibold text-cream">
-            ServeSync
+            ServeSync - Operated by BrightWave Studio
           </h2>
           <p className="text-cream/60 mt-2 text-sm leading-relaxed">
             The back-office platform for hospitality operators — time, money,
@@ -33,6 +35,7 @@ export default function Footer() {
           </p>
         </div>
 
+        {/* Columns */}
         <div className="flex flex-wrap gap-16">
           {columns.map((col) => (
             <div key={col.title} className="flex flex-col gap-2">
@@ -62,10 +65,25 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="text-cream/50 text-sm">
+        {/* Copyright + Legal */}
+        <div className="text-cream/50 text-sm flex flex-col gap-2">
           <span className="font-semibold text-cream/80">© 2026 ServeSync</span>
-          <p className="mt-1">All rights reserved.</p>
+          <p>All rights reserved.</p>
+
+          {/* Legal links */}
+          <div className="flex gap-4 mt-2">
+            <Link to="/privacy" className="hover:text-cream transition">
+              Privacy
+            </Link>
+            <Link to="/terms" className="hover:text-cream transition">
+              Terms
+            </Link>
+            <Link to="/cookies" className="hover:text-cream transition">
+              Cookies
+            </Link>
+          </div>
         </div>
+
       </div>
     </footer>
   );

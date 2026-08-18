@@ -8,9 +8,9 @@ export default function MobileNavbar() {
   return (
     <nav className="w-full bg-cream border-b border-espresso/10 py-4 px-6 md:hidden sticky top-0 z-40 cursor default">
       <div className="flex justify-between items-center">
-        <span className="font-display text-xl font-semibold text-espresso">
+        <a href="/" className="font-display text-xl font-semibold text-espresso">
           ServeSync
-        </span>
+        </a>
 
         <button
           onClick={() => setOpen(!open)}
@@ -33,8 +33,9 @@ export default function MobileNavbar() {
               {link}
             </a>
           ))}
+
           <a
-            href="/#cta"
+            href="/trial"
             onClick={() => setOpen(false)}
             className="bg-ember text-cream font-semibold px-5 py-3 rounded-md text-center"
           >
