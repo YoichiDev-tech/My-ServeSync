@@ -6,6 +6,9 @@ This repository contains the full codebase for the public landing page and the b
 This file serves as the `high‑level summary` of the entire project.  
 For detailed documentation, refer to the folder‑specific README files.
 
+## Screenshot
+![alt text](ServeSync/public/images/README-image.png)
+
 ## Project Purpose
 
 ServeSync aims to automate the operational workload of restaurants, cafés, bars, and hospitality groups.  
@@ -23,32 +26,89 @@ As the project evolves, additional modules (scheduling, payroll, staff managemen
 - `Backend:` Express (Vercel Serverless Functions)  
 - `Database:` Supabase (PostgreSQL + RLS)  
 - `Auth:` Supabase Auth  
-- `Deployment:` Vercel  
+- `Deployment:` Vercel
+
+## Authentication System
+
+- Supabase Auth  
+- Email/password login  
+- Password reset  
+- Email verification  
+- Multi‑tenant RLS  
+- Auth Guard  
+- Admin Guard  
 
 ## Current Status (Summary)
 
 - Full landing page completed  
 - Contact form fully functional  
-- Staff creation API implemented  
 - Supabase RLS configured for multi‑tenant data isolation  
-- Frontend staff creation form connected to backend  
-- Project ready for next modules (staff list, staff edit, scheduling)
+- Authentication system implemented  
+- Trial system implemented  
+- Dashboard, settings, and admin routes added  
 
 For deeper details, see `/frontend/README.md`.
 
+## Trial System
+
+- 14‑day trial  
+- Auto‑activation on first dashboard visit  
+- Trial banner  
+- Trial lock (redirect to /trial-expired)  
+- Trial Expired page  
+- Trial columns in profiles table  
+
+## Application Structure
+
+- Landing page (public marketing site)  
+- Frontend application (dashboard, settings, admin)  
+- Backend API (serverless functions)  
+- Supabase database + authentication  
+
+## Subscription System (Upcoming)
+
+- Stripe Checkout integration  
+- Stripe Webhooks  
+- Subscription status sync  
+- Billing history page  
+- Subscription cancellation flow  
+
+## Backend Overview
+
+- Serverless API routes  
+- Supabase database  
+- Row-Level Security (RLS)  
+- Profiles table  
+- Trial columns  
+- Subscription columns (upcoming)  
+
 ## Roadmap (High-Level)
 
-These are the next major milestones for ServeSync:
+### Frontend (Landing Page)
+- Testimonials section  
+- Dashboard preview section  
+- Smooth scroll navigation  
+- Active link highlighting  
+- Scroll‑triggered animations  
+- Multi‑language support  
 
-- Staff List Page (view all staff)
-- Staff Edit Page (update staff details)
-- Staff Delete Flow
-- Scheduling module (shifts, availability, constraints)
-- Dashboard preview section for landing page
-- Multi‑language support
-- Full documentation for API folder
+### Core SaaS
+- Subscription system (Stripe)  
+- Billing history  
+- Business profile page  
+- Email verification flow  
 
-Detailed task breakdowns will be added as GitHub issues.
+### Admin
+- User list  
+- Extend trial  
+- Subscription overview  
+- Analytics  
+
+### Operations Modules
+- Staff list  
+- Staff edit  
+- Staff delete  
+- Scheduling module  
 
 ## End‑Project Considerations
 
@@ -56,7 +116,6 @@ This file will be updated as ServeSync grows.
 It will include:
 
 - Architecture decisions  
-- Deployment notes  
 - Module summaries  
 - Final project documentation  
 - Release notes for major versions  
