@@ -28,6 +28,7 @@ export default function Navbar() {
         >
           Start free trial
         </a>
+
       </div>
     </nav>
   );
