@@ -9,7 +9,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  async function handleRegister(e) {
+  async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -24,6 +24,7 @@ export default function Register() {
     }
 
     const user = data.user;
+    if(!user) return; // Runtime crash prevention
 
     // Inserts profile row
     await supabaseClient.from("profiles").insert({

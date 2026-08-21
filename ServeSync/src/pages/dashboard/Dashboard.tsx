@@ -6,7 +6,7 @@ import LogoutButton from "../../components/LogoutButton";
 export default function Dashboard() {
   useAuthGuard();
 
-  const { trialStartedAt, trialEndsAt } = useTrialActivation();
+  const { trialEndsAt } = useTrialActivation();
 
   return (
     <SectionWrapper className="bg-cream text-espresso pt-16 pb-24">

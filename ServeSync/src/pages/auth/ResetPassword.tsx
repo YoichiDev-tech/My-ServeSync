@@ -8,7 +8,7 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  async function handleUpdate(e) {
+  async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const { error } = await supabaseClient.auth.updateUser({ password });
