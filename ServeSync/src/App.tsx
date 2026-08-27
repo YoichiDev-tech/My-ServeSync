@@ -6,6 +6,8 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import Trial from "./pages/Trial";
+import TrialFree from "./pages/TrialFree";
+import TrialPremium from "./pages/TrialPremium";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Cookies from "./pages/Cookies";
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/cookies" element={<Cookies />} />
+          <Route path="/trial/free" element={<TrialFree />} />
+          <Route path="/trial/premium" element={<TrialPremium />} />
 
           {/* Authentication pages */}
           <Route path="/login" element={<Login />} />
