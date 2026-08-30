@@ -1,105 +1,130 @@
-# Title
+# ServeSync — Project Overview
 
-ServeSync
+ServeSync is an AI‑powered back‑office system designed for hospitality operators.  
+This repository contains the full codebase for the public landing page and the backend API routes powering early ServeSync features.
+
+This file serves as the `high‑level summary` of the entire project.  
+For detailed documentation, refer to the folder‑specific README files.
 
 ## Screenshot
+![alt text](ServeSync/public/images/README-image.png)
 
-![alt text](image.png)
-## Description
+## Project Purpose
 
-ServeSync is an AI back-office system designed for hospitality operators.
-This project is the official landing page showcasing ServeSync's mission, problem, solution and more.
+ServeSync aims to automate the operational workload of restaurants, cafés, bars, and hospitality groups.  
+This repository currently includes:
 
-## Current version
+- The official landing page  
+- Backend API endpoints for checkout, onboarding, and trial management  
+- Full integration with Supabase for authentication and data storage  
+- Full integration with Stripe for subscription billing  
 
-v1.0.0 - 29/07/2026
-Initial full landing page release including:
+As the project evolves, additional modules (scheduling, inventory, staff management, reporting) will be added.
 
-- Global layout
-- Desktop + mobile navbar
-- Footer
-- All landing sections
-- Animations
-- Responsive design
-- Vercel‑ready deployment
+## Tech Stack (High-Level)
 
-## Features
+- `Frontend:` React, Vite, TypeScript, Tailwind CSS  
+- `Backend:` Express (Vercel Serverless Functions)  
+- `Database:` Supabase (PostgreSQL + RLS)  
+- `Auth:` Supabase Auth  
+- `Payments:` Stripe (Checkout + Payment Links)  
+- `Deployment:` Vercel  
 
-- Hero section
-- Problem section
-- Solution section
-- Features section
-- Value section
-- Pricing section
-- FAQ section
-- Contact section
-- CTA section
-- Mobile navigation
-- Global layout wrapper
-- Smooth animations (fade‑in + slide‑up)
+## Authentication System
 
-## Tech stack
+- Supabase Auth  
+- Email/password login  
+- Password reset  
+- Email verification  
+- Multi‑tenant RLS  
+- Auth Guard  
+- Admin Guard  
 
-- React
-- Vite
-- Typescript
-- Tailwind CSS
-- Supabase
+## Current Status (Summary)
 
-## Bugs (on current commit)
+- Full landing page completed  
+- Contact form fully functional  
+- Supabase RLS configured for multi‑tenant data isolation  
+- Authentication system implemented  
+- Trial system implemented (14-day, one trial per email, server-enforced)  
+- Stripe Checkout live for three plans: Counter, Kitchen, and Group (custom pricing)  
+- Onboarding flow verified end-to-end, including live payment testing  
+- Dashboard shell with sidebar navigation in progress  
 
-None
+For deeper details, see `/frontend/README.md`.
 
-## Future improvements
+## Trial System
 
-- Add testimonials section
-- Add dashboard preview section
-- Add smooth scroll navigation
-- Add active link highlighting
-- Add animations triggered on scroll
-- Add multi‑language support
-- Stripe Checkout integration
-- Stripe Webhooks
-- Subscription status sync
-- Billing history page
-- Subscription cancellation
-- Admin analytics
-- Extend trial feature
-- Business profile page
-- Multi-tenant support
+- 14‑day trial  
+- One trial per email, enforced server-side via a permanent ledger  
+- Trial banner  
+- Trial columns in profiles table  
+- Trial Expired page  
+- Full reuse-prevention/auto-cleanup enforcement in progress  
+
+## Subscription System
+
+- Stripe Checkout integration — **live**  
+- Three plans: Counter ($39/mo), Kitchen ($99/mo), Group (custom, via Payment Link)  
+- Server-side plan verification (Stripe session metadata cross-checked before granting access)  
+- Stripe Webhooks — upcoming  
+- Billing history page — upcoming  
+- Subscription cancellation flow — upcoming  
+
+## Application Structure
+
+- Landing page (public marketing site)  
+- Frontend application (dashboard, settings, admin)  
+- Backend API (serverless functions)  
+- Supabase database + authentication  
+
+## Backend Overview
+
+- Serverless API routes  
+- Supabase database  
+- Row-Level Security (RLS)  
+- Profiles table (trial + subscription columns)  
+
+## Roadmap (High-Level)
+
+### Frontend (Landing Page)
+- Testimonials section  
+- Dashboard preview section  
+- Smooth scroll navigation  
+- Active link highlighting  
+- Scroll‑triggered animations  
+- Multi‑language support  
+
+### Core SaaS
+- Trial expiration enforcement (in progress)  
+- Multi-currency checkout  
+- Billing history  
+- Business profile page  
+
+### Admin
+- User list  
+- Extend trial  
+- Subscription overview  
+- Analytics  
+
+### Operations Modules
+- Scheduling module (in progress — first module)  
+- Inventory module  
+- Staff module  
+- Reports module  
+
+## End‑Project Considerations
+
+This file will be updated as ServeSync grows.  
+It will include:
+
+- Architecture decisions  
+- Module summaries  
+- Final project documentation  
+- Release notes for major versions  
+
+For implementation‑level details, refer to the frontend and API READMEs.
 
 ## Author
 
 Yoichi dev
-
-
-## Changelog - 20/08/2026
-### Trial
-- 14‑day free trial
-- Automatic trial activation on first dashboard visit
-- Trial banner
-- Trial expiration lock
-- Trial Expired page
-- Redirect behavior
-
-### Authentication and Guards
-- Auth Guard (protects dashboard)
-- Admin Guard (protects admin routes)
-- Trial Lock (protects dashboard after expiration)
-- Email + password update flow
-- Supabase integration
-
-### New Pages
-
-### User Settings
-- Email update
-- Password update
-- Supabase auth update
-- Security considerations
-
-### Dashboard Enhancement
-- Trial banner
-- Logout button
-- Clean layout
-- Auth guard
-- Trial lock
