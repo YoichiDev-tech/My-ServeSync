@@ -3,10 +3,18 @@ import SectionWrapper from "../components/SectionWrapper";
 import useAuthGuard from "../hooks/useAuthGuard";
 import { supabaseClient } from "../utils/supabaseClient";
 
+type PlanKey = "counter" | "kitchen";
+
+const PLANS: { key: PlanKey; name: string; price: string; audience: string }[] = [
+  { key: "counter", name: "Counter", price: "$39/mo", audience: "Family restaurants & single-site cafés" },
+  { key: "kitchen", name: "Kitchen", price: "$99/mo", audience: "Full-service restaurants & QSR" },
+];
+
 export default function Subscribe() {
   useAuthGuard();
 
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("counter");
 
   async function handleUpgrade() {
     setStatus("loading");
@@ -26,7 +34,7 @@ export default function Subscribe() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ intent: "upgrade" }),
+        body: JSON.stringify({ intent: "upgrade", plan: selectedPlan }),
       });
 
       const data = await res.json();
@@ -51,6 +59,25 @@ export default function Subscribe() {
         <p className="text-lg text-espresso/80">
           Unlock full access to ServeSync with a monthly subscription.
         </p>
+
+        <div className="grid grid-cols-2 gap-3 max-w-md">
+          {PLANS.map((p) => (
+            <button
+              type="button"
+              key={p.key}
+              onClick={() => setSelectedPlan(p.key)}
+              className={`text-left p-4 rounded-md border transition ${
+                selectedPlan === p.key
+                  ? "border-ember ring-2 ring-ember bg-ember/5"
+                  : "border-espresso/25 hover:border-espresso/50"
+              }`}
+            >
+              <div className="font-semibold">{p.name}</div>
+              <div className="font-mono text-lg">{p.price}</div>
+              <div className="text-xs text-espresso/60 mt-1">{p.audience}</div>
+            </button>
+          ))}
+        </div>
 
         <button
           type="button"

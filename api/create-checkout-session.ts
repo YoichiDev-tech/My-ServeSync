@@ -6,6 +6,7 @@ export const app = express();
 app.use(express.json({ limit: "10kb" }));
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PLAN_KEYS = ["counter", "kitchen"] as const;
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -20,7 +21,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use(async (req: Request, res: Response) => {
   const body = req.body ?? {};
-  const { intent, email } = body;
+  const { intent, email, plan } = body;
 
   if (intent !== "new" && intent !== "upgrade") {
     return res.status(400).json({
@@ -29,16 +30,31 @@ app.use(async (req: Request, res: Response) => {
     });
   }
 
-  const priceId = process.env.STRIPE_PRICE_ID;
+  if (typeof plan !== "string" || !PLAN_KEYS.includes(plan as any)) {
+    return res.status(400).json({
+      success: false,
+      error: `plan must be one of: ${PLAN_KEYS.join(", ")}.`,
+    });
+  }
+
+  // Read fresh on every request — never cache env-derived values at module
+  // scope, since serverless/test environments can change env vars between
+  // module load and request time
+  const PLAN_PRICE_IDS: Record<string, string | undefined> = {
+    counter: process.env.STRIPE_PRICE_ID_COUNTER,
+    kitchen: process.env.STRIPE_PRICE_ID_KITCHEN,
+  };
+
+  const priceId = PLAN_PRICE_IDS[plan];
   if (!priceId) {
     return res.status(500).json({
       success: false,
-      error: "Payments are not configured.",
+      error: "Payments are not configured for this plan.",
     });
   }
 
   let customerEmail: string | undefined;
-  let metadata: Record<string, string> = { intent };
+  let metadata: Record<string, string> = { intent, plan };
   let successUrl: string;
   let cancelUrl: string;
 
@@ -46,15 +62,12 @@ app.use(async (req: Request, res: Response) => {
     const siteUrl = getSiteUrl();
 
     if (intent === "new") {
-      // Guest checkout ahead of account creation. The registration step
-      // verifies this session belongs to the email the user signs up with
       if (isNonEmptyString(email) && EMAIL_PATTERN.test(email)) {
         customerEmail = email;
       }
-      successUrl = `${siteUrl}/register?plan=premium&session_id={CHECKOUT_SESSION_ID}`;
+      successUrl = `${siteUrl}/register?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`;
       cancelUrl = `${siteUrl}/trial/premium`;
     } else {
-      // Upgrade for an already-authenticated trial user.
       const user = await getUserFromAuthHeader(req.headers.authorization);
       if (!user) {
         return res.status(401).json({
@@ -69,7 +82,7 @@ app.use(async (req: Request, res: Response) => {
         });
       }
       customerEmail = user.email;
-      metadata = { intent, user_id: user.id };
+      metadata = { intent, plan, user_id: user.id };
       successUrl = `${siteUrl}/dashboard?upgraded=1&session_id={CHECKOUT_SESSION_ID}`;
       cancelUrl = `${siteUrl}/dashboard`;
     }

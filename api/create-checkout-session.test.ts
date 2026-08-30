@@ -29,7 +29,8 @@ beforeEach(() => {
     SUPABASE_URL: "https://test.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "test_service_role_key",
     STRIPE_SECRET_KEY: "sk_test_123",
-    STRIPE_PRICE_ID: "price_123",
+    STRIPE_PRICE_ID_COUNTER: "price_counter_123",
+    STRIPE_PRICE_ID_KITCHEN: "price_kitchen_456",
     PUBLIC_SITE_URL: "https://servesync.test",
   };
 
@@ -51,30 +52,50 @@ function post(body: unknown, token?: string) {
 
 describe("validation", () => {
   it("rejects an unknown intent", async () => {
-    const res = await post({ intent: "renew" });
+    const res = await post({ intent: "renew", plan: "counter" });
     expect(res.status).toBe(400);
   });
 
-  it("returns 500 when STRIPE_PRICE_ID is not configured", async () => {
-    delete process.env.STRIPE_PRICE_ID;
+  it("rejects a missing plan", async () => {
     const res = await post({ intent: "new" });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an unknown plan", async () => {
+    const res = await post({ intent: "new", plan: "deluxe" });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 500 when the selected plan's price id is not configured", async () => {
+    delete process.env.STRIPE_PRICE_ID_COUNTER;
+    const res = await post({ intent: "new", plan: "counter" });
     expect(res.status).toBe(500);
   });
 });
 
 describe("new signup checkout", () => {
-  it("creates a guest checkout session and returns its url", async () => {
-    const res = await post({ intent: "new", email: "jamie@example.com" });
+  it("creates a guest checkout session on the Counter plan and returns its url", async () => {
+    const res = await post({ intent: "new", plan: "counter", email: "jamie@example.com" });
     expect(res.status).toBe(200);
     expect(res.body.url).toBe("https://checkout.stripe.com/session/abc");
 
     const args = createSessionMock.mock.calls[0][0];
-    expect(args.success_url).toContain("/register?plan=premium");
+    expect(args.line_items[0].price).toBe("price_counter_123");
+    expect(args.success_url).toContain("/register?plan=counter");
     expect(args.customer_email).toBe("jamie@example.com");
   });
 
+  it("creates a guest checkout session on the Kitchen plan using its own price id", async () => {
+    const res = await post({ intent: "new", plan: "kitchen" });
+    expect(res.status).toBe(200);
+
+    const args = createSessionMock.mock.calls[0][0];
+    expect(args.line_items[0].price).toBe("price_kitchen_456");
+    expect(args.success_url).toContain("/register?plan=kitchen");
+  });
+
   it("does not require authentication", async () => {
-    const res = await post({ intent: "new" });
+    const res = await post({ intent: "new", plan: "counter" });
     expect(res.status).toBe(200);
     expect(getUserMock).not.toHaveBeenCalled();
   });
@@ -83,15 +104,19 @@ describe("new signup checkout", () => {
 describe("upgrade checkout", () => {
   it("requires authentication", async () => {
     getUserMock.mockResolvedValueOnce({ data: { user: null }, error: { message: "bad token" } });
-    const res = await post({ intent: "upgrade" }, "bad-token");
+    const res = await post({ intent: "upgrade", plan: "counter" }, "bad-token");
     expect(res.status).toBe(401);
   });
 
   it("uses the authenticated user's own email, ignoring any email in the body", async () => {
-    const res = await post({ intent: "upgrade", email: "attacker@example.com" }, "good-token");
+    const res = await post(
+      { intent: "upgrade", plan: "kitchen", email: "attacker@example.com" },
+      "good-token"
+    );
     expect(res.status).toBe(200);
 
     const args = createSessionMock.mock.calls[0][0];
+    expect(args.line_items[0].price).toBe("price_kitchen_456");
     expect(args.customer_email).toBe("jamie@example.com");
     expect(args.success_url).toContain("/dashboard?upgraded=1");
   });
