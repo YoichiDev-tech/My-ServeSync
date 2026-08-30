@@ -6,6 +6,8 @@ export const app = express();
 app.use(express.json({ limit: "10kb" }));
 
 const TRIAL_LENGTH_MS = 14 * 24 * 60 * 60 * 1000;
+const PAID_PLANS = ["counter", "kitchen", "group"] as const;
+type PaidPlan = (typeof PAID_PLANS)[number];
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.method !== "POST") {
@@ -18,10 +20,13 @@ app.use(async (req: Request, res: Response) => {
   const body = req.body ?? {};
   const { plan, session_id: sessionId } = body;
 
-  if (plan !== "trial" && plan !== "premium") {
+  const isTrial = plan === "trial";
+  const isPaid = PAID_PLANS.includes(plan);
+
+  if (!isTrial && !isPaid) {
     return res.status(400).json({
       success: false,
-      error: "plan must be 'trial' or 'premium'.",
+      error: `plan must be 'trial' or one of: ${PAID_PLANS.join(", ")}.`,
     });
   }
 
@@ -42,17 +47,12 @@ app.use(async (req: Request, res: Response) => {
   const admin = getSupabaseAdmin();
   const normalizedEmail = user.email.trim().toLowerCase();
 
-  if (plan === "trial") {
-    // The trial_usage table has a primary key on email, so this insert is
-    // the single source of truth for "has this email ever had a trial" —
-    // it stays in place even after the trial account itself is deleted,
-    // which is what actually enforces "no second trial"
+  if (isTrial) {
     const { error: usageError } = await admin
       .from("trial_usage")
       .insert([{ email: normalizedEmail }]);
 
     if (usageError) {
-      // Unique violation => this email already used its trial
       if (usageError.code === "23505") {
         return res.status(409).json({
           success: false,
@@ -92,11 +92,13 @@ app.use(async (req: Request, res: Response) => {
     });
   }
 
-  // plan === "premium"
+  // isPaid: plan is "counter", "kitchen", or "group"
+  const paidPlan = plan as PaidPlan;
+
   if (typeof sessionId !== "string" || sessionId.trim().length === 0) {
     return res.status(400).json({
       success: false,
-      error: "session_id is required to activate a premium account.",
+      error: "session_id is required to activate a paid account.",
     });
   }
 
@@ -122,11 +124,17 @@ app.use(async (req: Request, res: Response) => {
 
   const sessionEmail = session.customer_details?.email?.trim().toLowerCase();
   if (!sessionEmail || sessionEmail !== normalizedEmail) {
-    // Prevents someone from reusing another shopper's session_id to unlock
-    // premium on an unrelated account
     return res.status(403).json({
       success: false,
       error: "Payment session does not match this account's email.",
+    });
+  }
+
+  const paidPlanFromSession = session.metadata?.plan;
+  if (paidPlanFromSession !== paidPlan) {
+    return res.status(403).json({
+      success: false,
+      error: "Requested plan does not match the completed payment.",
     });
   }
 
@@ -139,6 +147,7 @@ app.use(async (req: Request, res: Response) => {
     .from("profiles")
     .update({
       subscription_status: "active",
+      subscription_plan: paidPlan,
       stripe_customer_id:
         typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
       stripe_subscription_id: subscriptionId,

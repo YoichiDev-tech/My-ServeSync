@@ -15,7 +15,6 @@ vi.mock("@supabase/supabase-js", () => {
         if (table === "trial_usage") {
           return { insert: insertMock };
         }
-        // profiles
         return {
           update: (payload: unknown) => {
             profilesUpdateMock(payload);
@@ -118,24 +117,28 @@ describe("trial plan", () => {
   });
 });
 
-describe("premium plan", () => {
+describe.each(["counter", "kitchen"] as const)("%s plan", (plan) => {
   it("requires a session_id", async () => {
-    const res = await post({ plan: "premium" });
+    const res = await post({ plan });
     expect(res.status).toBe(400);
   });
 
-  it("activates premium when the Stripe session is paid and emails match", async () => {
+  it("activates the account when the Stripe session is paid, emails match, and metadata plan matches", async () => {
     retrieveSessionMock.mockResolvedValueOnce({
       payment_status: "paid",
       status: "complete",
       customer_details: { email: "jamie@example.com" },
       customer: "cus_123",
       subscription: "sub_123",
+      metadata: { plan },
     });
 
-    const res = await post({ plan: "premium", session_id: "cs_test_123" });
+    const res = await post({ plan, session_id: "cs_test_123" });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
+    expect(profilesUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ subscription_plan: plan })
+    );
   });
 
   it("rejects when the Stripe session isn't paid", async () => {
@@ -143,9 +146,10 @@ describe("premium plan", () => {
       payment_status: "unpaid",
       status: "open",
       customer_details: { email: "jamie@example.com" },
+      metadata: { plan },
     });
 
-    const res = await post({ plan: "premium", session_id: "cs_test_123" });
+    const res = await post({ plan, session_id: "cs_test_123" });
     expect(res.status).toBe(402);
   });
 
@@ -156,15 +160,31 @@ describe("premium plan", () => {
       customer_details: { email: "someone-else@example.com" },
       customer: "cus_123",
       subscription: "sub_123",
+      metadata: { plan },
     });
 
-    const res = await post({ plan: "premium", session_id: "cs_test_123" });
+    const res = await post({ plan, session_id: "cs_test_123" });
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects when the session's metadata plan doesn't match the requested plan", async () => {
+    const otherPlan = plan === "counter" ? "kitchen" : "counter";
+    retrieveSessionMock.mockResolvedValueOnce({
+      payment_status: "paid",
+      status: "complete",
+      customer_details: { email: "jamie@example.com" },
+      customer: "cus_123",
+      subscription: "sub_123",
+      metadata: { plan: otherPlan },
+    });
+
+    const res = await post({ plan, session_id: "cs_test_123" });
     expect(res.status).toBe(403);
   });
 
   it("returns 400 when the Stripe session can't be retrieved", async () => {
     retrieveSessionMock.mockRejectedValueOnce(new Error("no such session"));
-    const res = await post({ plan: "premium", session_id: "cs_bad" });
+    const res = await post({ plan, session_id: "cs_bad" });
     expect(res.status).toBe(400);
   });
 });
