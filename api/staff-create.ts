@@ -16,6 +16,10 @@ const MAX_LENGTHS = {
     notes: 2000,
 } as const;
 
+function isNonEmptyString(value: unknown): value is string {
+    return typeof value === 'string' && value.trim().length > 0;
+}
+
 // Only POST allowed
 app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.method !== 'POST') {
@@ -42,11 +46,23 @@ app.use(async (req: Request, res: Response) => {
         notes,
     } = body;
     // Basic required fields
-    if (!isNonEmptyString(name) || !isNonEmptyString(role) || typeof hourly_rate !== 'number' ||
-        typeof max_weekly_hours !== 'number') {
+    if (!isNonEmptyString(name) || !isNonEmptyString(role) ||
+        typeof hourly_rate !== 'number' || !Number.isFinite(hourly_rate) ||
+        typeof max_weekly_hours !== 'number' || !Number.isFinite(max_weekly_hours)) {
         return res.status(400).json({
             success: false,
             error: "Missing required fields.",
+        });
+    }
+
+    // Numeric range checks
+    if (
+        hourly_rate < 0 || hourly_rate > MAX_LENGTHS.hourly_rate ||
+        max_weekly_hours < 0 || max_weekly_hours > MAX_LENGTHS.max_weekly_hours
+    ) {
+        return res.status(400).json({
+            success: false,
+            error: "hourly_rate or max_weekly_hours is out of the allowed range.",
         });
     }
 
@@ -66,7 +82,7 @@ app.use(async (req: Request, res: Response) => {
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!); // Must be service role key for insert with RLS
 
     // Get user_id from header (frontend must send it)
-    const userId =  req.headers['X-user-id'];
+    const userId = req.headers['x-user-id'];
     if (!userId || typeof userId !== 'string') {
         return res.status(401).json({
             success: false,
@@ -113,6 +129,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 // Vercel-compatible handler
-export default function handler(req: any. res: any) {
+export default function handler(req: any, res: any) {
     return app(req, res);
 }
