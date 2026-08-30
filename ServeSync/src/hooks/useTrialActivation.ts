@@ -1,65 +1,56 @@
+// Reads the signed-in user's trial/subscription status for display (e.g.
+// the "your trial ends on..." banner on the dashboard).
+
+// This hook is intentionally read-only. Trials are started exactly once,
+// server-side, in api/complete-onboarding.ts during registration — never
+// here. The previous version of this hook auto-started a new trial for any
+// signed-in user who didn't have one yet, which meant deleting an expired
+// trial account and registering again with the same flow could hand out a
+// second trial. Enforcement now lives in a permanent per-email ledger on
+// the server (see supabase/migrations/0001_onboarding.sql)
+
 import { useEffect, useState } from "react";
 import { supabaseClient } from "../utils/supabaseClient";
 
+type SubscriptionStatus = "none" | "trialing" | "active";
+
 interface TrialInfo {
-  trialStartedAt: string | null;
   trialEndsAt: string | null;
+  subscriptionStatus: SubscriptionStatus;
+  loading: boolean;
 }
 
-export default function useTrialActivation() {
+export default function useTrialActivation(): TrialInfo {
   const [trialInfo, setTrialInfo] = useState<TrialInfo>({
-    trialStartedAt: null,
     trialEndsAt: null,
+    subscriptionStatus: "none",
+    loading: true,
   });
 
   useEffect(() => {
-    async function ensureTrial() {
+    async function loadTrialInfo() {
       const { data: sessionData } = await supabaseClient.auth.getSession();
       const session = sessionData.session;
 
-      if (!session) return;
-
-      const userId = session.user.id;
-
-      const { data: profile } = await supabaseClient
-        .from("profiles")
-        .select("trial_started_at, trial_ends_at")
-        .eq("id", userId)
-        .single();
-
-      if (!profile) return;
-
-      // If trial already exists, just store it
-      if (profile.trial_started_at && profile.trial_ends_at) {
-        setTrialInfo({
-          trialStartedAt: profile.trial_started_at,
-          trialEndsAt: profile.trial_ends_at,
-        });
+      if (!session) {
+        setTrialInfo({ trialEndsAt: null, subscriptionStatus: "none", loading: false });
         return;
       }
 
-      // Otherwise, start a new 14-day trial
-      const start = new Date();
-      const end = new Date(start.getTime() + 14 * 24 * 60 * 60 * 1000);
-
-      const startIso = start.toISOString();
-      const endIso = end.toISOString();
-
-      await supabaseClient
+      const { data: profile } = await supabaseClient
         .from("profiles")
-        .update({
-          trial_started_at: startIso,
-          trial_ends_at: endIso,
-        })
-        .eq("id", userId);
+        .select("trial_ends_at, subscription_status")
+        .eq("id", session.user.id)
+        .single();
 
       setTrialInfo({
-        trialStartedAt: startIso,
-        trialEndsAt: endIso,
+        trialEndsAt: profile?.trial_ends_at ?? null,
+        subscriptionStatus: (profile?.subscription_status as SubscriptionStatus) ?? "none",
+        loading: false,
       });
     }
 
-    ensureTrial();
+    loadTrialInfo();
   }, []);
 
   return trialInfo;

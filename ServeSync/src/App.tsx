@@ -35,11 +35,11 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/trial" element={<Trial />} />
+          <Route path="/trial/free" element={<TrialFree />} />
+          <Route path="/trial/premium" element={<TrialPremium />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/cookies" element={<Cookies />} />
-          <Route path="/trial/free" element={<TrialFree />} />
-          <Route path="/trial/premium" element={<TrialPremium />} />
 
           {/* Authentication pages */}
           <Route path="/login" element={<Login />} />

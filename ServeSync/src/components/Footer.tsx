@@ -27,7 +27,7 @@ export default function Footer() {
         {/* Branding */}
         <div className="max-w-xs">
           <h2 className="font-display text-2xl font-semibold text-cream">
-            ServeSync - Operated by BrightWave Studio
+            ServeSync - Operated by PrismWave Studio
           </h2>
           <p className="text-cream/60 mt-2 text-sm leading-relaxed">
             The back-office platform for hospitality operators — time, money,
