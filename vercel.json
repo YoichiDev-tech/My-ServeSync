@@ -1,8 +1,11 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install",
+  "installCommand": "npm install && npm install --prefix ServeSync",
+  "buildCommand": "npm run build --prefix ServeSync",
+  "outputDirectory": "ServeSync/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/cleanup-expired-trials", "schedule": "0 3 * * *" }
   ]
 }

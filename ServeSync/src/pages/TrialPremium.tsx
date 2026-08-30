@@ -1,7 +1,5 @@
 import { useState } from "react";
 import SectionWrapper from "../components/SectionWrapper";
-import useAuthGuard from "../hooks/useAuthGuard";
-import { supabaseClient } from "../utils/supabaseClient";
 
 type PlanKey = "counter" | "kitchen";
 
@@ -10,31 +8,23 @@ const PLANS: { key: PlanKey; name: string; price: string; audience: string }[] =
   { key: "kitchen", name: "Kitchen", price: "$99/mo", audience: "Full-service restaurants & QSR" },
 ];
 
-export default function Subscribe() {
-  useAuthGuard();
-
+export default function TrialPremium() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [email, setEmail] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<PlanKey>("counter");
 
-  async function handleUpgrade() {
+  async function handlePayment() {
     setStatus("loading");
-
-    const { data: sessionData } = await supabaseClient.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-
-    if (!accessToken) {
-      window.location.href = "/login";
-      return;
-    }
 
     try {
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ intent: "upgrade", plan: selectedPlan }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          intent: "new",
+          plan: selectedPlan,
+          email: email || undefined,
+        }),
       });
 
       const data = await res.json();
@@ -52,15 +42,16 @@ export default function Subscribe() {
 
   return (
     <SectionWrapper className="bg-cream text-espresso pt-16 pb-24">
-      <div className="max-w-3xl mx-auto flex flex-col gap-6">
+      <div className="max-w-md mx-auto flex flex-col gap-6">
 
-        <h1 className="text-4xl font-semibold">Subscribe to ServeSync</h1>
+        <h1 className="text-4xl font-semibold">Go Premium</h1>
 
         <p className="text-lg text-espresso/80">
-          Unlock full access to ServeSync with a monthly subscription.
+          Subscribe now for full access to ServeSync — no trial needed.
+          You'll create your account right after payment.
         </p>
 
-        <div className="grid grid-cols-2 gap-3 max-w-md">
+        <div className="grid grid-cols-2 gap-3">
           {PLANS.map((p) => (
             <button
               type="button"
@@ -79,9 +70,17 @@ export default function Subscribe() {
           ))}
         </div>
 
+        <input
+          type="email"
+          placeholder="Email (optional, pre-fills checkout)"
+          className="p-3 rounded-md border border-espresso/25 bg-cream text-espresso"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
         <button
           type="button"
-          onClick={handleUpgrade}
+          onClick={handlePayment}
           disabled={status === "loading"}
           className="bg-ember text-cream font-semibold px-7 py-3.5 rounded-md hover:bg-ember-dark transition w-fit disabled:opacity-60"
         >
