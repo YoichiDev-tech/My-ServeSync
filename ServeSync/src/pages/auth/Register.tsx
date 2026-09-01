@@ -18,21 +18,66 @@ export default function Register() {
 
   const rawPlan = searchParams.get("plan");
   const sessionId = searchParams.get("session_id");
-   const plan: Plan | null =
-    rawPlan === "trial" || rawPlan === "counter" || rawPlan === "kitchen" || rawPlan === "group"
+
+  const plan: Plan | null =
+    rawPlan === "trial" ||
+    rawPlan === "counter" ||
+    rawPlan === "kitchen" ||
+    rawPlan === "group"
       ? rawPlan
       : null;
-  const isPaidPlan = plan === "counter" || plan === "kitchen" || plan === "group";
+
+  const isPaidPlan =
+    plan === "counter" || plan === "kitchen" || plan === "group";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Trial reuse + expiration enforcement
   useEffect(() => {
-    if (!plan || (isPaidPlan && !sessionId)) {
-      navigate("/trial", { replace: true });
+    async function enforceTrialRules() {
+      if (!plan || (isPaidPlan && !sessionId)) {
+        navigate("/trial", { replace: true });
+        return;
+      }
+
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const session = sessionData.session;
+
+      // If user is logged in, check if they already used trial
+      if (session) {
+        const { data: profile } = await supabaseClient
+          .from("profiles")
+          .select("has_used_trial, subscription_status, trial_ends_at")
+          .eq("id", session.user.id)
+          .single();
+
+        if (!profile) return;
+
+        const { has_used_trial, subscription_status, trial_ends_at } = profile;
+
+        // If user already used trial and is not premium -> block
+        if (plan === "trial" && has_used_trial && subscription_status !== "active") {
+          navigate("/trial-expired", { replace: true });
+          return;
+        }
+
+        // If trial expired -> block
+        if (
+          plan === "trial" &&
+          subscription_status === "trialing" &&
+          trial_ends_at &&
+          new Date(trial_ends_at) < new Date()
+        ) {
+          navigate("/trial-expired", { replace: true });
+          return;
+        }
+      }
     }
+
+    enforceTrialRules();
   }, [plan, isPaidPlan, sessionId, navigate]);
 
   if (!plan || (isPaidPlan && !sessionId)) {
@@ -44,10 +89,11 @@ export default function Register() {
     setError("");
     setSubmitting(true);
 
-    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
-      email,
-      password,
-    });
+    const { data: signUpData, error: signUpError } =
+      await supabaseClient.auth.signUp({
+        email,
+        password,
+      });
 
     if (signUpError) {
       setError(signUpError.message);
@@ -68,10 +114,11 @@ export default function Register() {
       role: "user",
     });
 
-    const { data: signInData, error: loginError } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: signInData, error: loginError } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (loginError) {
       setError(loginError.message);
@@ -101,7 +148,9 @@ export default function Register() {
     const data = await res.json();
 
     if (!data.success) {
-      setError(data.error || "Could not finish setting up your account.");
+      setError(
+        data.error || "Could not finish setting up your account."
+      );
       setSubmitting(false);
       return;
     }
@@ -112,9 +161,10 @@ export default function Register() {
   return (
     <SectionWrapper className="bg-cream text-espresso pt-16 pb-24">
       <div className="max-w-md mx-auto flex flex-col gap-6">
-
         <h1 className="text-4xl font-semibold">
-          {isPaidPlan ? `Create Your ${PLAN_LABELS[plan]} Account` : "Create Your Free Trial Account"}
+          {isPaidPlan
+            ? `Create Your ${PLAN_LABELS[plan]} Account`
+            : "Create Your Free Trial Account"}
         </h1>
 
         {isPaidPlan && (
@@ -124,7 +174,6 @@ export default function Register() {
         )}
 
         <form onSubmit={handleRegister} className="flex flex-col gap-4">
-
           <input
             type="email"
             placeholder="Email"
@@ -150,7 +199,6 @@ export default function Register() {
           >
             {submitting ? "Creating account…" : "Create Account"}
           </button>
-
         </form>
 
         <div className="text-sm mt-4">
@@ -158,7 +206,6 @@ export default function Register() {
             Already have an account?
           </Link>
         </div>
-
       </div>
     </SectionWrapper>
   );
