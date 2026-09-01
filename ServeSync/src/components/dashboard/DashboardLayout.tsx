@@ -6,7 +6,7 @@ import { supabaseClient } from "../../utils/supabaseClient";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Overview", end: true },
-  { to: "/dashboard/scheduling", label: "Scheduling" },
+  { to: "/dashboard/scheduling", label: "Schedule" },
   { to: "/dashboard/inventory", label: "Inventory" },
   { to: "/dashboard/staff", label: "Staff" },
   { to: "/dashboard/reports", label: "Reports" },
