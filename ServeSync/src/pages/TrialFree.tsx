@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SectionWrapper from "../components/SectionWrapper";
 import CookieConsentModal from "../components/CookieConsentModal";
+import { supabaseClient } from "../utils/supabaseClient";
 
 const CONSENT_KEY = "servesync_cookie_consent";
 
@@ -12,9 +13,34 @@ export default function TrialFree() {
   );
 
   useEffect(() => {
-    if (!showConsent) {
-      navigate("/register?plan=trial", { replace: true });
+    async function checkTrialReuse() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const session = sessionData.session;
+
+      // If logged in, check if user already used trial
+      if (session) {
+        const { data: profile } = await supabaseClient
+          .from("profiles")
+          .select("has_used_trial, subscription_status")
+          .eq("id", session.user.id)
+          .single();
+
+        if (!profile) return;
+
+        // If user already used trial -> block access
+        if (profile.has_used_trial && profile.subscription_status !== "active") {
+          navigate("/trial-expired", { replace: true });
+          return;
+        }
+      }
+
+      // If consent already accepted -> go to registration
+      if (!showConsent) {
+        navigate("/register?plan=trial", { replace: true });
+      }
     }
+
+    checkTrialReuse();
   }, [showConsent, navigate]);
 
   function handleAccept() {

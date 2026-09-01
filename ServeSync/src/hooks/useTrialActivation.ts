@@ -1,14 +1,3 @@
-// Reads the signed-in user's trial/subscription status for display (e.g.
-// the "your trial ends on..." banner on the dashboard).
-
-// This hook is intentionally read-only. Trials are started exactly once,
-// server-side, in api/complete-onboarding.ts during registration — never
-// here. The previous version of this hook auto-started a new trial for any
-// signed-in user who didn't have one yet, which meant deleting an expired
-// trial account and registering again with the same flow could hand out a
-// second trial. Enforcement now lives in a permanent per-email ledger on
-// the server (see supabase/migrations/0001_onboarding.sql)
-
 import { useEffect, useState } from "react";
 import { supabaseClient } from "../utils/supabaseClient";
 
@@ -18,6 +7,7 @@ interface TrialInfo {
   trialEndsAt: string | null;
   subscriptionStatus: SubscriptionStatus;
   loading: boolean;
+  isTrialExpired: boolean;
 }
 
 export default function useTrialActivation(): TrialInfo {
@@ -25,6 +15,7 @@ export default function useTrialActivation(): TrialInfo {
     trialEndsAt: null,
     subscriptionStatus: "none",
     loading: true,
+    isTrialExpired: false,
   });
 
   useEffect(() => {
@@ -33,7 +24,12 @@ export default function useTrialActivation(): TrialInfo {
       const session = sessionData.session;
 
       if (!session) {
-        setTrialInfo({ trialEndsAt: null, subscriptionStatus: "none", loading: false });
+        setTrialInfo({
+          trialEndsAt: null,
+          subscriptionStatus: "none",
+          loading: false,
+          isTrialExpired: false,
+        });
         return;
       }
 
@@ -43,10 +39,41 @@ export default function useTrialActivation(): TrialInfo {
         .eq("id", session.user.id)
         .single();
 
+      const trialEndsAt = profile?.trial_ends_at ?? null;
+      const subscriptionStatus =
+        (profile?.subscription_status as SubscriptionStatus) ?? "none";
+
+      const now = new Date();
+      const expired =
+        subscriptionStatus === "trialing" &&
+        trialEndsAt &&
+        new Date(trialEndsAt) < now;
+
+      // If expired - delete + logout + redirect
+      if (expired) {
+        try {
+          // Delete profile row (auth deletion must be done server-side)
+          await supabaseClient
+            .from("profiles")
+            .delete()
+            .eq("id", session.user.id);
+
+          // Sign out user
+          await supabaseClient.auth.signOut();
+
+          // Redirect
+          window.location.href = "/trial-expired";
+          return; // stop further state updates
+        } catch (err) {
+          console.error("Failed to clean up expired trial user:", err);
+        }
+      }
+
       setTrialInfo({
-        trialEndsAt: profile?.trial_ends_at ?? null,
-        subscriptionStatus: (profile?.subscription_status as SubscriptionStatus) ?? "none",
+        trialEndsAt,
+        subscriptionStatus,
         loading: false,
+        isTrialExpired: expired,
       });
     }
 
