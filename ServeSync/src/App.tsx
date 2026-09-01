@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
 
 // Public pages
 import HomePage from "./pages/HomePage";
@@ -20,6 +21,10 @@ import ResetPassword from "./pages/auth/ResetPassword";
 
 // App pages
 import Dashboard from "./pages/dashboard/Dashboard";
+import Scheduling from "./pages/dashboard/Scheduling";
+import Inventory from "./pages/dashboard/Inventory";
+import Staff from "./pages/dashboard/Staff";
+import Reports from "./pages/dashboard/Reports";
 import TrialExpired from "./pages/TrialExpired";
 import Subscribe from "./pages/Subscribe";
 import UserSettings from "./pages/settings/UserSettings";
@@ -28,10 +33,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
+      <Routes>
 
-          {/* Public pages */}
+        {/* Public/marketing pages — keep the marketing navbar + footer */}
+        <Route element={<Layout><Outlet /></Layout>}>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/trial" element={<Trial />} />
@@ -40,22 +45,26 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/cookies" element={<Cookies />} />
-
-          {/* Authentication pages */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-
-          {/* App pages */}
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/trial-expired" element={<TrialExpired />} />
+        </Route>
+
+        {/* App/dashboard pages — own shell, no marketing chrome */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/scheduling" element={<Scheduling />} />
+          <Route path="/dashboard/inventory" element={<Inventory />} />
+          <Route path="/dashboard/staff" element={<Staff />} />
+          <Route path="/dashboard/reports" element={<Reports />} />
           <Route path="/subscribe" element={<Subscribe />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/admin" element={<AdminDashboard />} />
+        </Route>
 
-        </Routes>
-      </Layout>
+      </Routes>
     </BrowserRouter>
   );
 }
