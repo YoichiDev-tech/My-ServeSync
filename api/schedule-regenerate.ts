@@ -4,6 +4,12 @@ import { getSupabaseAdmin, getUserFromAuthHeader } from "./_lib/supabaseAdmin";
 export const app = express();
 app.use(express.json({ limit: "10kb" }));
 
+function validMonday(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value && parsed.getUTCDay() === 1;
+}
+
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.method !== "POST") return res.status(405).json({ success: false, error: "Method not allowed." });
   next();
@@ -13,9 +19,9 @@ app.use(async (req: Request, res: Response) => {
   const user = await getUserFromAuthHeader(req.headers.authorization);
   if (!user) return res.status(401).json({ success: false, error: "Missing or invalid authentication." });
 
-  const { availability_id: availabilityId } = req.body ?? {};
-  if (typeof availabilityId !== "string" || !/^[0-9a-f-]{36}$/i.test(availabilityId)) {
-    return res.status(400).json({ success: false, error: "A valid availability_id is required." });
+  const { week_start_date: weekStartDate } = req.body ?? {};
+  if (!validMonday(weekStartDate)) {
+    return res.status(400).json({ success: false, error: "week_start_date must be a valid Monday in YYYY-MM-DD format." });
   }
 
   const flowUrl = process.env.POWER_AUTOMATE_WEBHOOK_URL;
@@ -35,20 +41,22 @@ app.use(async (req: Request, res: Response) => {
   }
 
   const admin = getSupabaseAdmin();
-  const { data: submission, error } = await admin
+  const { data: submissions, error } = await admin
     .from("staff_availability")
-    .select("id, user_id, week_start_date, availability")
-    .eq("id", availabilityId)
+    .select("id, staff_id, week_start_date, availability")
     .eq("user_id", user.id)
-    .maybeSingle();
+    .eq("week_start_date", weekStartDate)
+    .order("created_at", { ascending: true });
 
-  if (error || !submission) {
-    return res.status(404).json({ success: false, error: "Availability submission not found." });
+  if (error) return res.status(500).json({ success: false, error: "Could not load staff availability." });
+  if (!submissions || submissions.length === 0) {
+    return res.status(409).json({ success: false, error: "Save availability for at least one staff member before generating a schedule." });
   }
 
+  const ids = submissions.map((item: any) => item.id);
   await admin.from("staff_availability")
     .update({ status: "processing", error_message: null })
-    .eq("id", submission.id)
+    .in("id", ids)
     .eq("user_id", user.id);
 
   try {
@@ -59,21 +67,21 @@ app.use(async (req: Request, res: Response) => {
         "x-servesync-webhook-secret": flowSecret,
       },
       body: JSON.stringify({
-        availability_id: submission.id,
-        user_id: submission.user_id,
-        week_start_date: submission.week_start_date,
-        availability: submission.availability,
+        user_id: user.id,
+        week_start_date: weekStartDate,
+        availability_ids: ids,
+        availability_submissions: submissions,
         callback_url: `${process.env.PUBLIC_SITE_URL?.replace(/\/+$/, "")}/api/schedule-result`,
         regeneration: true,
       }),
       signal: AbortSignal.timeout(10000),
     });
     if (!response.ok) throw new Error("Automation returned a non-success response.");
-    return res.status(202).json({ success: true, message: "Schedule regeneration requested." });
+    return res.status(202).json({ success: true, message: "Weekly schedule generation requested." });
   } catch {
     await admin.from("staff_availability")
       .update({ status: "failed", error_message: "Automation request failed." })
-      .eq("id", submission.id)
+      .in("id", ids)
       .eq("user_id", user.id);
     return res.status(502).json({ success: false, error: "Could not reach scheduling automation." });
   }
