@@ -62,7 +62,11 @@ export default function Staff() {
   }
 
   useEffect(() => {
-    void loadStaff();
+    const timer = window.setTimeout(() => {
+      void loadStaff();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   function updateField(field: keyof StaffForm, value: string) {
