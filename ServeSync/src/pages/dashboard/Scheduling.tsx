@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabaseClient } from "../../utils/supabaseClient";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -90,7 +90,7 @@ export default function Scheduling() {
     );
   }
 
-  async function submitAvailability(event: React.FormEvent<HTMLFormElement>) {
+  async function submitAvailability(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice("");
     setError("");
