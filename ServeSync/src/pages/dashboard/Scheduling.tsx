@@ -3,6 +3,7 @@ import { supabaseClient } from "../../utils/supabaseClient";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+type StaffMember = { id: string; name: string; role: string };
 type GeneratedSchedule = {
   id: string;
   week_start_date: string;
@@ -25,8 +26,11 @@ export default function Scheduling() {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
   const [schedules, setSchedules] = useState<GeneratedSchedule[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [selectedStaffId, setSelectedStaffId] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [publishingId, setPublishingId] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -58,8 +62,26 @@ export default function Scheduling() {
     }
   }
 
+  async function loadStaff() {
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const response = await fetch("/api/staff-list", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Could not load staff members.");
+      const members: StaffMember[] = data.staff ?? [];
+      setStaff(members);
+      setSelectedStaffId((current) => current || members[0]?.id || "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load staff members.");
+    }
+  }
+
   useEffect(() => {
     void loadSchedules();
+    void loadStaff();
   }, []);
 
   function toggleDay(day: string) {
@@ -73,6 +95,10 @@ export default function Scheduling() {
     setNotice("");
     setError("");
 
+    if (!selectedStaffId) {
+      setError("Add a staff member first, then select who this availability belongs to.");
+      return;
+    }
     if (selectedDays.length === 0) {
       setError("Choose at least one day when you are available.");
       return;
@@ -93,18 +119,45 @@ export default function Scheduling() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          staff_id: selectedStaffId,
           week_start_date: weekStartDate,
           availability: selectedDays.map((day) => ({ day, start: startTime, end: endTime })),
         }),
       });
       const data = await response.json();
       if (!response.ok || !data.success) throw new Error(data.error || "Could not submit availability.");
-      setNotice(data.message || "Availability submitted.");
+      setNotice(data.message || "Availability saved.");
       await loadSchedules();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit availability.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+
+  async function generateSchedule() {
+    setNotice("");
+    setError("");
+    setGenerating(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error("Your session has expired. Please sign in again.");
+      const response = await fetch("/api/schedule-regenerate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ week_start_date: weekStartDate }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Could not generate the schedule.");
+      setNotice(data.message || "Schedule generation requested.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not generate the schedule.");
+    } finally {
+      setGenerating(false);
     }
   }
 
@@ -151,7 +204,29 @@ export default function Scheduling() {
           uses these details to generate a draft schedule.
         </p>
 
+        {staff.length === 0 && (
+          <p className="mt-4 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+            No team members are set up yet. Add staff members under Dashboard → Staff before entering availability.
+          </p>
+        )}
+
         <form onSubmit={submitAvailability} className="mt-6 flex flex-col gap-5">
+          <label className="flex max-w-md flex-col gap-2 text-sm font-medium">
+            Staff member
+            <select
+              required
+              value={selectedStaffId}
+              onChange={(event) => setSelectedStaffId(event.target.value)}
+              disabled={staff.length === 0}
+              className="rounded-md border border-espresso/20 bg-cream p-3"
+            >
+              <option value="">Select a staff member</option>
+              {staff.map((member) => (
+                <option key={member.id} value={member.id}>{member.name} — {member.role}</option>
+              ))}
+            </select>
+          </label>
+
           <label className="flex max-w-xs flex-col gap-2 text-sm font-medium">
             Week starting (Monday)
             <input
@@ -189,9 +264,14 @@ export default function Scheduling() {
             </label>
           </div>
 
-          <button type="submit" disabled={submitting} className="w-fit rounded-md bg-ember px-6 py-3 font-semibold text-cream transition hover:bg-ember-dark disabled:opacity-60">
-            {submitting ? "Submitting…" : "Submit availability"}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button type="submit" disabled={submitting || staff.length === 0} className="w-fit rounded-md bg-ember px-6 py-3 font-semibold text-cream transition hover:bg-ember-dark disabled:opacity-60">
+              {submitting ? "Saving…" : "Save staff availability"}
+            </button>
+            <button type="button" onClick={() => void generateSchedule()} disabled={generating || staff.length === 0} className="w-fit rounded-md border border-espresso/20 px-6 py-3 font-semibold transition hover:border-ember disabled:opacity-60">
+              {generating ? "Requesting schedule…" : "Generate weekly schedule"}
+            </button>
+          </div>
         </form>
       </section>
 
