@@ -14,7 +14,7 @@ app.use(async (req: Request, res: Response) => {
 
   const { data, error } = await getSupabaseAdmin()
     .from("generated_schedules")
-    .select("id, week_start_date, schedule, status, created_at, updated_at")
+    .select("id, week_start_date, schedule, status, notification_sent_at, created_at, updated_at")
     .eq("user_id", user.id)
     .order("week_start_date", { ascending: false })
     .limit(8);
