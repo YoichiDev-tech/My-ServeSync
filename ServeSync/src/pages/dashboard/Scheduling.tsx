@@ -26,6 +26,7 @@ export default function Scheduling() {
   const [schedules, setSchedules] = useState<GeneratedSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [publishingId, setPublishingId] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -92,11 +93,7 @@ export default function Scheduling() {
         },
         body: JSON.stringify({
           week_start_date: weekStartDate,
-          availability: selectedDays.map((day) => ({
-            day,
-            start: startTime,
-            end: endTime,
-          })),
+          availability: selectedDays.map((day) => ({ day, start: startTime, end: endTime })),
         }),
       });
       const data = await response.json();
@@ -107,6 +104,32 @@ export default function Scheduling() {
       setError(err instanceof Error ? err.message : "Could not submit availability.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function publishSchedule(scheduleId: string) {
+    setNotice("");
+    setError("");
+    setPublishingId(scheduleId);
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error("Your session has expired. Please sign in again.");
+      const response = await fetch("/api/schedule-publish", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ schedule_id: scheduleId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Could not publish schedule.");
+      setNotice(data.message || "Schedule published.");
+      await loadSchedules();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not publish schedule.");
+    } finally {
+      setPublishingId("");
     }
   }
 
@@ -146,11 +169,7 @@ export default function Scheduling() {
                 const value = day.toLowerCase();
                 return (
                   <label key={value} className="flex items-center gap-2 rounded-md border border-espresso/10 p-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedDays.includes(value)}
-                      onChange={() => toggleDay(value)}
-                    />
+                    <input type="checkbox" checked={selectedDays.includes(value)} onChange={() => toggleDay(value)} />
                     <span>{day}</span>
                   </label>
                 );
@@ -161,53 +180,33 @@ export default function Scheduling() {
           <div className="grid max-w-md grid-cols-2 gap-4">
             <label className="flex flex-col gap-2 text-sm font-medium">
               Available from
-              <input
-                type="time"
-                required
-                value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
-                className="rounded-md border border-espresso/20 bg-cream p-3"
-              />
+              <input type="time" required value={startTime} onChange={(event) => setStartTime(event.target.value)} className="rounded-md border border-espresso/20 bg-cream p-3" />
             </label>
             <label className="flex flex-col gap-2 text-sm font-medium">
               Available until
-              <input
-                type="time"
-                required
-                value={endTime}
-                onChange={(event) => setEndTime(event.target.value)}
-                className="rounded-md border border-espresso/20 bg-cream p-3"
-              />
+              <input type="time" required value={endTime} onChange={(event) => setEndTime(event.target.value)} className="rounded-md border border-espresso/20 bg-cream p-3" />
             </label>
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-fit rounded-md bg-ember px-6 py-3 font-semibold text-cream transition hover:bg-ember-dark disabled:opacity-60"
-          >
+          <button type="submit" disabled={submitting} className="w-fit rounded-md bg-ember px-6 py-3 font-semibold text-cream transition hover:bg-ember-dark disabled:opacity-60">
             {submitting ? "Submitting…" : "Submit availability"}
           </button>
         </form>
-
-        {notice && <p role="status" className="mt-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</p>}
-        {error && <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       </section>
 
       <section className="rounded-xl border border-espresso/10 bg-paper p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold">Generated schedules</h2>
-            <p className="mt-1 text-sm text-espresso/70">Review the latest schedules returned by the automation flow.</p>
+            <p className="mt-1 text-sm text-espresso/70">Review drafts before publishing them to your team.</p>
           </div>
-          <button
-            type="button"
-            onClick={() => void loadSchedules()}
-            className="rounded-md border border-espresso/20 px-4 py-2 text-sm font-semibold hover:border-ember"
-          >
+          <button type="button" onClick={() => void loadSchedules()} className="rounded-md border border-espresso/20 px-4 py-2 text-sm font-semibold hover:border-ember">
             Refresh
           </button>
         </div>
+
+        {notice && <p role="status" className="mt-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</p>}
+        {error && <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
         {loading ? (
           <p className="mt-5 text-sm text-espresso/70">Loading schedules…</p>
@@ -217,9 +216,19 @@ export default function Scheduling() {
           <div className="mt-5 flex flex-col gap-4">
             {schedules.map((item) => (
               <article key={item.id} className="rounded-lg border border-espresso/10 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="font-semibold">Week of {item.week_start_date}</h3>
-                  <span className="rounded-full bg-ember/10 px-3 py-1 text-xs font-semibold uppercase">{item.status}</span>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold">Week of {item.week_start_date}</h3>
+                    <span className="text-xs font-semibold uppercase text-espresso/65">{item.status}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void publishSchedule(item.id)}
+                    disabled={publishingId !== ""}
+                    className="rounded-md bg-ember px-4 py-2 text-sm font-semibold text-cream hover:bg-ember-dark disabled:opacity-60"
+                  >
+                    {publishingId === item.id ? "Publishing…" : item.status === "published" ? "Retry team notification" : "Publish & notify team"}
+                  </button>
                 </div>
                 <pre className="mt-3 overflow-x-auto rounded-md bg-cream p-4 text-xs leading-5">
                   {JSON.stringify(item.schedule, null, 2)}
