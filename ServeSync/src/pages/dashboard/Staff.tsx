@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabaseClient } from "../../utils/supabaseClient";
 
 type StaffMember = {
@@ -69,7 +69,7 @@ export default function Staff() {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  async function addStaffMember(event: React.FormEvent<HTMLFormElement>) {
+  async function addStaffMember(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice("");
     setError("");
