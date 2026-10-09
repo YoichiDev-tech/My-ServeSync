@@ -8,6 +8,7 @@ type GeneratedSchedule = {
   week_start_date: string;
   schedule: unknown;
   status: "draft" | "published" | string;
+  notification_sent_at?: string | null;
   created_at: string;
 };
 
@@ -221,14 +222,20 @@ export default function Scheduling() {
                     <h3 className="font-semibold">Week of {item.week_start_date}</h3>
                     <span className="text-xs font-semibold uppercase text-espresso/65">{item.status}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => void publishSchedule(item.id)}
-                    disabled={publishingId !== ""}
-                    className="rounded-md bg-ember px-4 py-2 text-sm font-semibold text-cream hover:bg-ember-dark disabled:opacity-60"
-                  >
-                    {publishingId === item.id ? "Publishing…" : item.status === "published" ? "Retry team notification" : "Publish & notify team"}
-                  </button>
+                  {item.status === "published" && item.notification_sent_at ? (
+                    <span className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
+                      Team notified
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void publishSchedule(item.id)}
+                      disabled={publishingId !== ""}
+                      className="rounded-md bg-ember px-4 py-2 text-sm font-semibold text-cream hover:bg-ember-dark disabled:opacity-60"
+                    >
+                      {publishingId === item.id ? "Publishing…" : "Publish & notify team"}
+                    </button>
+                  )}
                 </div>
                 <pre className="mt-3 overflow-x-auto rounded-md bg-cream p-4 text-xs leading-5">
                   {JSON.stringify(item.schedule, null, 2)}
