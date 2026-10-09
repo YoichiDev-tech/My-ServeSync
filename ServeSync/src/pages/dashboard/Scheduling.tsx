@@ -80,8 +80,12 @@ export default function Scheduling() {
   }
 
   useEffect(() => {
-    void loadSchedules();
-    void loadStaff();
+    const timer = window.setTimeout(() => {
+      void loadSchedules();
+      void loadStaff();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   function toggleDay(day: string) {
