@@ -7,9 +7,28 @@ app.use(express.json({ limit: "10kb" }));
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PLAN_KEYS = ["counter", "kitchen"] as const;
+const CURRENCIES = ["usd", "eur", "gbp"] as const;
+type PlanKey = (typeof PLAN_KEYS)[number];
+type Currency = (typeof CURRENCIES)[number];
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function getPriceId(plan: PlanKey, currency: Currency): string | undefined {
+  const envNames: Record<PlanKey, Record<Currency, string>> = {
+    counter: {
+      usd: "STRIPE_PRICE_ID_COUNTER",
+      eur: "STRIPE_PRICE_ID_COUNTER_EUR",
+      gbp: "STRIPE_PRICE_ID_COUNTER_GBP",
+    },
+    kitchen: {
+      usd: "STRIPE_PRICE_ID_KITCHEN",
+      eur: "STRIPE_PRICE_ID_KITCHEN_EUR",
+      gbp: "STRIPE_PRICE_ID_KITCHEN_GBP",
+    },
+  };
+  return process.env[envNames[plan][currency]];
 }
 
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -22,39 +41,29 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(async (req: Request, res: Response) => {
   const body = req.body ?? {};
   const { intent, email, plan } = body;
+  const rawCurrency = typeof body.currency === "string" ? body.currency.toLowerCase() : "usd";
 
   if (intent !== "new" && intent !== "upgrade") {
-    return res.status(400).json({
-      success: false,
-      error: "intent must be 'new' or 'upgrade'.",
-    });
+    return res.status(400).json({ success: false, error: "intent must be 'new' or 'upgrade'." });
+  }
+  if (typeof plan !== "string" || !PLAN_KEYS.includes(plan as PlanKey)) {
+    return res.status(400).json({ success: false, error: `plan must be one of: ${PLAN_KEYS.join(", ")}.` });
+  }
+  if (!CURRENCIES.includes(rawCurrency as Currency)) {
+    return res.status(400).json({ success: false, error: "currency must be usd, eur, or gbp." });
   }
 
-  if (typeof plan !== "string" || !PLAN_KEYS.includes(plan as any)) {
-    return res.status(400).json({
-      success: false,
-      error: `plan must be one of: ${PLAN_KEYS.join(", ")}.`,
-    });
-  }
-
-  // Read fresh on every request — never cache env-derived values at module
-  // scope, since serverless/test environments can change env vars between
-  // module load and request time
-  const PLAN_PRICE_IDS: Record<string, string | undefined> = {
-    counter: process.env.STRIPE_PRICE_ID_COUNTER,
-    kitchen: process.env.STRIPE_PRICE_ID_KITCHEN,
-  };
-
-  const priceId = PLAN_PRICE_IDS[plan];
+  const currency = rawCurrency as Currency;
+  const priceId = getPriceId(plan as PlanKey, currency);
   if (!priceId) {
-    return res.status(500).json({
+    return res.status(503).json({
       success: false,
-      error: "Payments are not configured for this plan.",
+      error: `Checkout is not configured for ${currency.toUpperCase()} yet. Please choose another currency or contact ServeSync.`,
     });
   }
 
   let customerEmail: string | undefined;
-  let metadata: Record<string, string> = { intent, plan };
+  let metadata: Record<string, string> = { intent, plan, currency };
   let successUrl: string;
   let cancelUrl: string;
 
@@ -62,27 +71,19 @@ app.use(async (req: Request, res: Response) => {
     const siteUrl = getSiteUrl();
 
     if (intent === "new") {
-      if (isNonEmptyString(email) && EMAIL_PATTERN.test(email)) {
-        customerEmail = email;
-      }
+      if (isNonEmptyString(email) && EMAIL_PATTERN.test(email)) customerEmail = email;
       successUrl = `${siteUrl}/register?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`;
       cancelUrl = `${siteUrl}/trial/premium`;
     } else {
       const user = await getUserFromAuthHeader(req.headers.authorization);
       if (!user) {
-        return res.status(401).json({
-          success: false,
-          error: "Missing or invalid authentication.",
-        });
+        return res.status(401).json({ success: false, error: "Missing or invalid authentication." });
       }
       if (!user.email) {
-        return res.status(400).json({
-          success: false,
-          error: "Account has no email on file.",
-        });
+        return res.status(400).json({ success: false, error: "Account has no email on file." });
       }
       customerEmail = user.email;
-      metadata = { intent, plan, user_id: user.id };
+      metadata = { intent, plan, currency, user_id: user.id };
       successUrl = `${siteUrl}/dashboard?upgraded=1&session_id={CHECKOUT_SESSION_ID}`;
       cancelUrl = `${siteUrl}/dashboard`;
     }
@@ -98,19 +99,11 @@ app.use(async (req: Request, res: Response) => {
     });
 
     if (!session.url) {
-      return res.status(502).json({
-        success: false,
-        error: "Could not start checkout session.",
-      });
+      return res.status(502).json({ success: false, error: "Could not start checkout session." });
     }
-
     return res.status(200).json({ success: true, url: session.url });
-  } catch (err) {
-    return res.status(502).json({
-      success: false,
-      error: "Could not start checkout session.",
-      details: err instanceof Error ? err.message : undefined,
-    });
+  } catch {
+    return res.status(502).json({ success: false, error: "Could not start checkout session." });
   }
 });
 
