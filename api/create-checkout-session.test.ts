@@ -70,7 +70,7 @@ describe("validation", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 500 when the selected plan's price id is not configured", async () => {
+  it("returns 503 when the selected plan's price id is not configured", async () => {
     delete process.env.STRIPE_PRICE_ID_COUNTER;
     const res = await post({ intent: "new", plan: "counter" });
     expect(res.status).toBe(503);
