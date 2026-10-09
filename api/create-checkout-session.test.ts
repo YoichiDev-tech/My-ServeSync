@@ -31,6 +31,10 @@ beforeEach(() => {
     STRIPE_SECRET_KEY: "sk_test_123",
     STRIPE_PRICE_ID_COUNTER: "price_counter_123",
     STRIPE_PRICE_ID_KITCHEN: "price_kitchen_456",
+    STRIPE_PRICE_ID_COUNTER_EUR: "price_counter_eur_123",
+    STRIPE_PRICE_ID_KITCHEN_EUR: "price_kitchen_eur_456",
+    STRIPE_PRICE_ID_COUNTER_GBP: "price_counter_gbp_123",
+    STRIPE_PRICE_ID_KITCHEN_GBP: "price_kitchen_gbp_456",
     PUBLIC_SITE_URL: "https://servesync.test",
   };
 
@@ -66,10 +70,15 @@ describe("validation", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 500 when the selected plan's price id is not configured", async () => {
+  it("returns 503 when the selected plan's price id is not configured", async () => {
     delete process.env.STRIPE_PRICE_ID_COUNTER;
     const res = await post({ intent: "new", plan: "counter" });
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(503);
+  });
+
+  it("rejects an unsupported currency", async () => {
+    const res = await post({ intent: "new", plan: "counter", currency: "cad" });
+    expect(res.status).toBe(400);
   });
 });
 
@@ -92,6 +101,22 @@ describe("new signup checkout", () => {
     const args = createSessionMock.mock.calls[0][0];
     expect(args.line_items[0].price).toBe("price_kitchen_456");
     expect(args.success_url).toContain("/register?plan=kitchen");
+  });
+
+  it("uses the configured EUR price and records the selected currency", async () => {
+    const res = await post({ intent: "new", plan: "counter", currency: "eur" });
+    expect(res.status).toBe(200);
+    const args = createSessionMock.mock.calls[0][0];
+    expect(args.line_items[0].price).toBe("price_counter_eur_123");
+    expect(args.metadata.currency).toBe("eur");
+  });
+
+  it("uses the configured GBP price for the Kitchen plan", async () => {
+    const res = await post({ intent: "new", plan: "kitchen", currency: "gbp" });
+    expect(res.status).toBe(200);
+    const args = createSessionMock.mock.calls[0][0];
+    expect(args.line_items[0].price).toBe("price_kitchen_gbp_456");
+    expect(args.metadata.currency).toBe("gbp");
   });
 
   it("does not require authentication", async () => {
