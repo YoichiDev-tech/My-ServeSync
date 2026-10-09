@@ -1,15 +1,18 @@
--- ServeSync scheduling pipeline: availability submissions and generated weekly schedules.
+-- ServeSync scheduling pipeline: staff availability submissions and generated weekly schedules.
 -- Apply this migration in the Supabase SQL editor or your migration runner.
+-- The existing public.staff table must be present before applying this migration.
 
 create table if not exists public.staff_availability (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
+  staff_id uuid not null references public.staff(id) on delete cascade,
   week_start_date date not null,
   availability jsonb not null,
   status text not null default 'submitted'
     check (status in ('submitted', 'processing', 'generated', 'failed')),
   error_message text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (user_id, staff_id, week_start_date)
 );
 
 create index if not exists staff_availability_user_week_idx
@@ -18,11 +21,12 @@ create index if not exists staff_availability_user_week_idx
 create table if not exists public.generated_schedules (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  availability_id uuid references public.staff_availability(id) on delete set null,
+  availability_ids uuid[] not null default '{}'::uuid[],
   week_start_date date not null,
   schedule jsonb not null,
-  status text not null default 'published'
+  status text not null default 'draft'
     check (status in ('draft', 'published')),
+  notification_sent_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, week_start_date)
@@ -44,6 +48,6 @@ create policy "Users can read their own generated schedules"
   on public.generated_schedules for select
   using (auth.uid() = user_id);
 
--- Writes are performed by authenticated server endpoints using the Supabase
--- service-role client after validating the user's access token or flow secret.
+-- Writes are performed by server endpoints using the service-role client only
+-- after validating the user's access token or the Power Automate shared secret.
 -- Never expose SUPABASE_SERVICE_ROLE_KEY in browser code.
