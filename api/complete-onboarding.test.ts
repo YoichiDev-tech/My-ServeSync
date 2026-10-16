@@ -125,6 +125,7 @@ describe.each(["counter", "kitchen"] as const)("%s plan", (plan) => {
 
   it("activates the account when the Stripe session is paid, emails match, and metadata plan matches", async () => {
     retrieveSessionMock.mockResolvedValueOnce({
+      mode: "subscription",
       payment_status: "paid",
       status: "complete",
       customer_details: { email: "jamie@example.com" },
@@ -143,6 +144,7 @@ describe.each(["counter", "kitchen"] as const)("%s plan", (plan) => {
 
   it("rejects when the Stripe session isn't paid", async () => {
     retrieveSessionMock.mockResolvedValueOnce({
+      mode: "subscription",
       payment_status: "unpaid",
       status: "open",
       customer_details: { email: "jamie@example.com" },
@@ -153,8 +155,72 @@ describe.each(["counter", "kitchen"] as const)("%s plan", (plan) => {
     expect(res.status).toBe(402);
   });
 
+  it("rejects a paid checkout session that is not a subscription", async () => {
+    retrieveSessionMock.mockResolvedValueOnce({
+      mode: "payment",
+      payment_status: "paid",
+      status: "complete",
+      customer_details: { email: "jamie@example.com" },
+      customer: "cus_123",
+      metadata: { plan },
+    });
+
+    const res = await post({ plan, session_id: "cs_test_123" });
+    expect(res.status).toBe(402);
+    expect(profilesUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a subscription checkout without a subscription id", async () => {
+    retrieveSessionMock.mockResolvedValueOnce({
+      mode: "subscription",
+      payment_status: "paid",
+      status: "complete",
+      customer_details: { email: "jamie@example.com" },
+      customer: "cus_123",
+      subscription: null,
+      metadata: { plan },
+    });
+
+    const res = await post({ plan, session_id: "cs_test_123" });
+    expect(res.status).toBe(402);
+    expect(profilesUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a completed checkout session when payment is still unpaid", async () => {
+    retrieveSessionMock.mockResolvedValueOnce({
+      mode: "subscription",
+      payment_status: "unpaid",
+      status: "complete",
+      customer_details: { email: "jamie@example.com" },
+      customer: "cus_123",
+      subscription: "sub_123",
+      metadata: { plan },
+    });
+
+    const res = await post({ plan, session_id: "cs_test_123" });
+    expect(res.status).toBe(402);
+    expect(profilesUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a paid session that has not completed", async () => {
+    retrieveSessionMock.mockResolvedValueOnce({
+      mode: "subscription",
+      payment_status: "paid",
+      status: "open",
+      customer_details: { email: "jamie@example.com" },
+      customer: "cus_123",
+      subscription: "sub_123",
+      metadata: { plan },
+    });
+
+    const res = await post({ plan, session_id: "cs_test_123" });
+    expect(res.status).toBe(402);
+    expect(profilesUpdateMock).not.toHaveBeenCalled();
+  });
+
   it("rejects when the session email doesn't match the account email", async () => {
     retrieveSessionMock.mockResolvedValueOnce({
+      mode: "subscription",
       payment_status: "paid",
       status: "complete",
       customer_details: { email: "someone-else@example.com" },
@@ -170,6 +236,7 @@ describe.each(["counter", "kitchen"] as const)("%s plan", (plan) => {
   it("rejects when the session's metadata plan doesn't match the requested plan", async () => {
     const otherPlan = plan === "counter" ? "kitchen" : "counter";
     retrieveSessionMock.mockResolvedValueOnce({
+      mode: "subscription",
       payment_status: "paid",
       status: "complete",
       customer_details: { email: "jamie@example.com" },
