@@ -115,7 +115,7 @@ app.use(async (req: Request, res: Response) => {
     });
   }
 
-  if (session.status !== "complete" || session.payment_status !== "paid") {
+  if (session.mode !== "subscription" || session.status !== "complete" || session.payment_status !== "paid") {
     return res.status(402).json({
       success: false,
       error: "Payment has not completed for this session.",
@@ -142,6 +142,13 @@ app.use(async (req: Request, res: Response) => {
     typeof session.subscription === "string"
       ? session.subscription
       : session.subscription?.id ?? null;
+
+  if (!subscriptionId) {
+    return res.status(402).json({
+      success: false,
+      error: "A valid subscription was not found for this checkout session.",
+    });
+  }
 
   const { error: profileError } = await admin
     .from("profiles")
