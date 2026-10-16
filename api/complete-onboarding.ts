@@ -115,7 +115,7 @@ app.use(async (req: Request, res: Response) => {
     });
   }
 
-  if (session.payment_status !== "paid" && session.status !== "complete") {
+  if (session.status !== "complete" || session.payment_status !== "paid") {
     return res.status(402).json({
       success: false,
       error: "Payment has not completed for this session.",
