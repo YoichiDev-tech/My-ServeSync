@@ -153,6 +153,36 @@ describe.each(["counter", "kitchen"] as const)("%s plan", (plan) => {
     expect(res.status).toBe(402);
   });
 
+  it("rejects a completed checkout session when payment is still unpaid", async () => {
+    retrieveSessionMock.mockResolvedValueOnce({
+      payment_status: "unpaid",
+      status: "complete",
+      customer_details: { email: "jamie@example.com" },
+      customer: "cus_123",
+      subscription: "sub_123",
+      metadata: { plan },
+    });
+
+    const res = await post({ plan, session_id: "cs_test_123" });
+    expect(res.status).toBe(402);
+    expect(profilesUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a paid session that has not completed", async () => {
+    retrieveSessionMock.mockResolvedValueOnce({
+      payment_status: "paid",
+      status: "open",
+      customer_details: { email: "jamie@example.com" },
+      customer: "cus_123",
+      subscription: "sub_123",
+      metadata: { plan },
+    });
+
+    const res = await post({ plan, session_id: "cs_test_123" });
+    expect(res.status).toBe(402);
+    expect(profilesUpdateMock).not.toHaveBeenCalled();
+  });
+
   it("rejects when the session email doesn't match the account email", async () => {
     retrieveSessionMock.mockResolvedValueOnce({
       payment_status: "paid",
